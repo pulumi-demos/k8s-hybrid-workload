@@ -1,0 +1,2 @@
+environment:
+  - lotctl/k8s-cluster-aks
