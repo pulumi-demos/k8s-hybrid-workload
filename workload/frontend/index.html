@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulumi Hybrid Workload — Sign Up</title>
+  <style>
+    :root {
+      --pulumi-purple: #805ac3;
+      --pulumi-purple-light: #9d7ad6;
+      --pulumi-purple-dark: #6a45ad;
+      --bg: #1b1a2e;
+      --bg-card: #24233d;
+      --bg-input: #16162a;
+      --text: #f4f3fb;
+      --text-muted: #a9a7c4;
+      --border: #37355a;
+      --success: #4ade80;
+      --error: #f87171;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at 20% 20%, #2a2850 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      width: 100%;
+      max-width: 440px;
+      padding: 40px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--pulumi-purple), var(--pulumi-purple-light));
+    }
+
+    .mascot {
+      display: block;
+      margin: 0 auto 18px;
+      width: 96px;
+      height: 96px;
+      filter: drop-shadow(0 6px 16px rgba(128, 90, 195, 0.5));
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      text-align: center;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 18px 0 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 15px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--pulumi-purple);
+      box-shadow: 0 0 0 3px rgba(128, 90, 195, 0.25);
+    }
+
+    button {
+      width: 100%;
+      margin-top: 28px;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--pulumi-purple), var(--pulumi-purple-dark));
+      color: #fff;
+      font-size: 1.02rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(128, 90, 195, 0.45);
+    }
+
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .status {
+      margin-top: 20px;
+      padding: 13px 15px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      text-align: center;
+      display: none;
+    }
+
+    .status.show { display: block; }
+    .status.success { background: rgba(74, 222, 128, 0.12); color: var(--success); border: 1px solid rgba(74, 222, 128, 0.3); }
+    .status.error { background: rgba(248, 113, 113, 0.12); color: var(--error); border: 1px solid rgba(248, 113, 113, 0.3); }
+
+    footer {
+      margin-top: 26px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    footer a { color: var(--pulumi-purple-light); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <!-- Pulumipus mascot (served from Pulumi's public asset CDN) -->
+    <img
+      class="mascot"
+      src="https://www.pulumi.com/logos/brand/avatar-on-white.svg"
+      alt="Pulumipus, the Pulumi mascot"
+      onerror="this.style.display='none'"
+    />
+    <h1>Join the Pulumipus Crew</h1>
+    <p class="subtitle">Powered by Pulumi + the Kubernetes Operator</p>
+
+    <form id="signup-form" autocomplete="on">
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" placeholder="Ada Lovelace" required />
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" placeholder="ada@example.com" required />
+
+      <button id="submit-btn" type="submit">Sign Up</button>
+    </form>
+
+    <div id="status" class="status"></div>
+
+    <footer>
+      Deployed as a hybrid workload with the
+      <a href="https://www.pulumi.com/product/pulumi-kubernetes-operator/" target="_blank" rel="noopener">Pulumi Kubernetes Operator</a>.
+    </footer>
+  </main>
+
+  <script>
+    // The API Gateway endpoint is injected at container start by substituting
+    // the __API_ENDPOINT__ placeholder (see the Nginx ConfigMap / entrypoint).
+    const API_ENDPOINT = "__API_ENDPOINT__";
+
+    const form = document.getElementById("signup-form");
+    const statusEl = document.getElementById("status");
+    const submitBtn = document.getElementById("submit-btn");
+
+    function showStatus(message, kind) {
+      statusEl.textContent = message;
+      statusEl.className = "status show " + kind;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      submitBtn.disabled = true;
+      showStatus("Submitting…", "success");
+
+      const payload = {
+        name: document.getElementById("name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+      };
+
+      try {
+        const res = await fetch(API_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error("HTTP " + res.status + ": " + text);
+        }
+
+        await res.json().catch(() => ({}));
+        showStatus("You're in, " + payload.name + "! 🎉", "success");
+        form.reset();
+      } catch (err) {
+        showStatus("Something went wrong: " + err.message, "error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

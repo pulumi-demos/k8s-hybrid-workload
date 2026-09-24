@@ -1,0 +1,12 @@
+name: k8s-hybrid-app
+description: >-
+  PKO-managed workload: DynamoDB + Lambda + API Gateway backend and an
+  Nginx-served, Pulumi-branded static frontend on Kubernetes.
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-typescript

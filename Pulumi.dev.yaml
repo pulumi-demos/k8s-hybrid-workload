@@ -1,2 +1,7 @@
 environment:
   - lotctl/k8s-cluster-aks
+  - cloud-access/aws-access
+config:
+  k8s-hybrid-workload:projectRepo: https://github.com/pulumi-pequod/k8s-hybrid-workload.git
+  k8s-hybrid-workload:pulumiAccessToken:
+    secure: AAABAG1oXcOgV4TyLltfcY58nkz9gn1TOA/F5J/NSb4OVEK++92fDPY8+1SIAEpI5rQlJ4AFqu9xFiJmB4tS5ZDtzl4kv+dHqKXRpw==
