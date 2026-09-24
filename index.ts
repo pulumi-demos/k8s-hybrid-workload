@@ -92,6 +92,29 @@ const accessTokenSecret = new k8s.core.v1.Secret(
 );
 
 // ---------------------------------------------------------------------------
+// Git authentication for the operator workspace
+// ---------------------------------------------------------------------------
+// The workload source repository is private, so the operator's workspace pod
+// needs a GitHub token to clone it. Store it in a Kubernetes Secret and wire
+// it into the Stack CR via `spec.gitAuth.accessToken`.
+//
+// Supply the token as a Pulumi secret config value:
+//   pulumi config set --secret githubToken <token>
+const gitAuthSecret = new k8s.core.v1.Secret(
+    "git-auth",
+    {
+        metadata: {
+            name: "git-auth-secret",
+            namespace: operatorNamespace,
+        },
+        stringData: {
+            accessToken: config.requireSecret("githubToken"),
+        },
+    },
+    { provider },
+);
+
+// ---------------------------------------------------------------------------
 // PKO Stack Custom Resource (pulumi.com/v1:Stack)
 // ---------------------------------------------------------------------------
 const workloadStackCr = new k8s.apiextensions.CustomResource(
@@ -111,6 +134,17 @@ const workloadStackCr = new k8s.apiextensions.CustomResource(
             projectRepo: projectRepo,
             branch: branch,
             repoDir: repoDir,
+
+            // Authenticate to the private workload repo with a GitHub token.
+            gitAuth: {
+                accessToken: {
+                    type: "Secret",
+                    secret: {
+                        name: gitAuthSecret.metadata.name,
+                        key: "accessToken",
+                    },
+                },
+            },
 
             // Attach the Pulumi ESC environment(s) that provide AWS credentials
             // and the Kubernetes provider context to the workspace pod.
@@ -142,7 +176,7 @@ const workloadStackCr = new k8s.apiextensions.CustomResource(
             destroyOnFinalize: true,
         },
     },
-    { provider, dependsOn: [accessTokenSecret] },
+    { provider, dependsOn: [accessTokenSecret, gitAuthSecret] },
 );
 
 // ---------------------------------------------------------------------------
