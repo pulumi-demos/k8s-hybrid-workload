@@ -27,8 +27,10 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import * as apigateway from "@pulumi/aws-apigateway";
 import * as k8s from "@pulumi/kubernetes";
-import * as dynamoClient from "@aws-sdk/client-dynamodb";
-import * as dynamoLib from "@aws-sdk/lib-dynamodb";
+// NOTE: The AWS SDK is intentionally NOT imported at module scope. It is
+// `require`d inside the Lambda callback so Pulumi's function serialization does
+// not try to capture/serialize the SDK (which contains native code and fails
+// to serialize).
 
 const config = new pulumi.Config();
 const appName = config.get("appName") ?? "pulumipus-signup";
@@ -155,9 +157,9 @@ const submitHandler = new aws.lambda.CallbackFunction(`${appName}-handler`, {
             };
         }
 
-        const doc = dynamoLib.DynamoDBDocument.from(
-            new dynamoClient.DynamoDBClient({}),
-        );
+        const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+        const { DynamoDBDocument } = require("@aws-sdk/lib-dynamodb");
+        const doc = DynamoDBDocument.from(new DynamoDBClient({}));
         await doc.put({
             TableName: process.env.TABLE_NAME,
             Item: {
