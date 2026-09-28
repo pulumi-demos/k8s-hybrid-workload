@@ -37,7 +37,9 @@ const appName = config.get("appName") ?? "pulumipus-signup";
 const runtime = "nodejs18.x";
 
 const baseTags = {
-    owner: "laci",
+    // NOTE: do NOT set an `owner` tag here — the AWS provider applies a
+    // stack-level default tag `Owner` (aws:defaultTags), and AWS IAM rejects
+    // tag keys that collide case-insensitively ("Owner" vs "owner").
     project: pulumi.getProject(),
     PulumiStack: pulumi.getStack(),
     managedBy: "pulumi-kubernetes-operator",
