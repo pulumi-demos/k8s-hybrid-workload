@@ -4,11 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pulumi Hybrid Workload — Sign Up</title>
+
+  <!-- CSS framework: Bootstrap 5 (responsive grid, autoscaling, mobile breakpoints) -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+
   <style>
     :root {
       --pulumi-purple: #805ac3;
       --pulumi-purple-light: #9d7ad6;
       --pulumi-purple-dark: #6a45ad;
+      --pulumi-teal: #34cad7;
       --bg: #1b1a2e;
       --bg-card: #24233d;
       --bg-input: #16162a;
@@ -19,161 +29,165 @@
       --error: #f87171;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: radial-gradient(circle at 20% 20%, #2a2850 0%, var(--bg) 55%);
       color: var(--text);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
     }
 
-    .card {
+    /* Card shell */
+    .signup-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 20px;
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-      width: 100%;
-      max-width: 440px;
-      padding: 40px 36px;
-      position: relative;
       overflow: hidden;
+      width: 100%;
+      max-width: 860px;
     }
 
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: 0 0 auto 0;
+    /* Left branding panel */
+    .brand-panel {
+      background: linear-gradient(160deg, rgba(128, 90, 195, 0.20), rgba(52, 202, 215, 0.10));
+      border-right: 1px solid var(--border);
+    }
+
+    /* On mobile the panel sits on top; drop the side border, add a bottom one */
+    @media (max-width: 767.98px) {
+      .brand-panel { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+
+    /* The Pulumipus graphic autoscales with its column */
+    .pulumipus {
+      width: 100%;
+      max-width: 240px;
+      height: auto;
+      filter: drop-shadow(0 10px 24px rgba(128, 90, 195, 0.45));
+    }
+
+    .accent-bar {
       height: 5px;
-      background: linear-gradient(90deg, var(--pulumi-purple), var(--pulumi-purple-light));
+      background: linear-gradient(90deg, var(--pulumi-purple), var(--pulumi-teal));
     }
 
-    .mascot {
-      display: block;
-      margin: 0 auto 18px;
-      width: 96px;
-      height: 96px;
-      filter: drop-shadow(0 6px 16px rgba(128, 90, 195, 0.5));
-    }
-
-    h1 {
-      font-size: 1.6rem;
-      text-align: center;
-      margin-bottom: 6px;
-      letter-spacing: -0.02em;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      margin-bottom: 28px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.82rem;
+    .form-label {
+      font-size: 0.8rem;
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      margin: 18px 0 8px;
     }
 
-    input {
-      width: 100%;
-      padding: 13px 15px;
+    .form-control {
       background: var(--bg-input);
       border: 1px solid var(--border);
-      border-radius: 10px;
       color: var(--text);
-      font-size: 1rem;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      padding: 0.7rem 0.9rem;
+      border-radius: 10px;
     }
-
-    input:focus {
-      outline: none;
+    .form-control:focus {
+      background: var(--bg-input);
+      color: var(--text);
       border-color: var(--pulumi-purple);
-      box-shadow: 0 0 0 3px rgba(128, 90, 195, 0.25);
+      box-shadow: 0 0 0 0.25rem rgba(128, 90, 195, 0.25);
     }
+    .form-control::placeholder { color: #6f6c92; }
 
-    button {
-      width: 100%;
-      margin-top: 28px;
-      padding: 14px;
+    .btn-pulumi {
       background: linear-gradient(135deg, var(--pulumi-purple), var(--pulumi-purple-dark));
       color: #fff;
-      font-size: 1.02rem;
       font-weight: 600;
+      padding: 0.75rem;
       border: none;
       border-radius: 10px;
-      cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
     }
-
-    button:hover:not(:disabled) {
+    .btn-pulumi:hover:not(:disabled) {
+      color: #fff;
       transform: translateY(-1px);
       box-shadow: 0 8px 22px rgba(128, 90, 195, 0.45);
     }
+    .btn-pulumi:disabled { opacity: 0.6; }
 
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .status-msg { display: none; border-radius: 10px; }
+    .status-msg.show { display: block; }
+    .status-msg.success { background: rgba(74, 222, 128, 0.12); color: var(--success); border: 1px solid rgba(74, 222, 128, 0.3); }
+    .status-msg.error { background: rgba(248, 113, 113, 0.12); color: var(--error); border: 1px solid rgba(248, 113, 113, 0.3); }
 
-    .status {
-      margin-top: 20px;
-      padding: 13px 15px;
-      border-radius: 10px;
-      font-size: 0.92rem;
-      text-align: center;
-      display: none;
-    }
-
-    .status.show { display: block; }
-    .status.success { background: rgba(74, 222, 128, 0.12); color: var(--success); border: 1px solid rgba(74, 222, 128, 0.3); }
-    .status.error { background: rgba(248, 113, 113, 0.12); color: var(--error); border: 1px solid rgba(248, 113, 113, 0.3); }
-
-    footer {
-      margin-top: 26px;
-      text-align: center;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    footer a { color: var(--pulumi-purple-light); text-decoration: none; }
+    .footer-note { font-size: 0.78rem; color: var(--text-muted); }
+    .footer-note a { color: var(--pulumi-purple-light); text-decoration: none; }
   </style>
 </head>
 <body>
-  <main class="card">
-    <!-- Pulumipus mascot (served from Pulumi's public asset CDN) -->
-    <img
-      class="mascot"
-      src="https://www.pulumi.com/logos/brand/avatar-on-white.svg"
-      alt="Pulumipus, the Pulumi mascot"
-      onerror="this.style.display='none'"
-    />
-    <h1>Join the Pulumipus Crew</h1>
-    <p class="subtitle">Powered by Pulumi + the Kubernetes Operator</p>
+  <div class="container-fluid d-flex align-items-center justify-content-center min-vh-100 p-3">
+    <div class="signup-card">
+      <div class="accent-bar"></div>
+      <!-- Responsive row: Pulumipus left, form right; stacks on < md -->
+      <div class="row g-0">
+        <!-- Left: Pulumipus branding -->
+        <div class="col-12 col-md-5 brand-panel d-flex flex-column align-items-center justify-content-center text-center p-4 p-md-5">
+          <!-- Pulumipus mascot (available-7.svg, inlined; white background rect removed) -->
+          <svg class="pulumipus" viewBox="0 0 134 134" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pulumipus, the Pulumi mascot">
+            <path d="M82.7842 93.7189C86.5844 94.1303 90.4325 93.0078 93.7771 91.1573C96.0221 89.9151 98.2457 88.2968 100.811 88.2601C102.956 88.2295 105.02 89.3816 106.364 91.0531C107.117 91.9892 107.674 93.0997 107.862 94.2861C108.408 97.7347 105.793 100.924 102.863 102.824C98.5016 105.654 93.2122 106.752 88.0166 106.944C83.7216 107.102 79.0557 106.528 75.9241 103.584C73.8696 101.653 72.7291 98.8918 72.3548 96.0972C72.0617 93.909 71.3226 87.2432 74.7393 89.6621C77.4327 91.569 79.2753 93.339 82.7842 93.7189Z" fill="#34CAD7"/>
+            <path d="M98.5116 94.076C95.6515 96.0748 92.2653 97.4451 88.7555 97.9068C87.5817 98.051 86.3813 98.0879 85.195 97.9128C84.6064 97.808 84.2353 97.5045 84.3515 97.2473C84.4503 97.0243 84.8444 96.9022 85.2853 96.9313C86.9347 96.9678 88.5905 96.7665 90.2165 96.364C92.9135 95.719 95.5604 94.6098 97.9794 93.2464C98.9958 92.6523 99.5053 93.3245 98.5116 94.076Z" fill="#2C1B60"/>
+            <path d="M101.937 97.1936C98.6698 99.5151 94.861 101.368 90.777 101.975C89.4159 102.169 88.0175 102.209 86.6451 101.999C85.9664 101.864 85.536 101.548 85.6686 101.293C85.7812 101.075 86.2399 100.966 86.7523 101.019C88.672 101.106 90.5998 100.87 92.4752 100.343C95.5915 99.504 98.5971 98.0277 101.395 96.3704C102.581 95.6535 103.079 96.3337 101.937 97.1936Z" fill="#2C1B60"/>
+            <path d="M93.5439 93.5415C95.0493 95.5008 96.6118 97.3868 98.3825 99.0956C98.9431 99.6533 99.5063 100.214 100.144 100.849C100.432 101.144 100.492 101.523 100.277 101.697C100.093 101.846 99.7654 101.794 99.4931 101.589C98.4907 100.831 97.5305 100.012 96.6145 99.1193C95.0984 97.6377 93.7646 95.9024 92.7273 94.0935C92.2915 93.3113 93.0029 92.8606 93.5439 93.5415Z" fill="#2C1B60"/>
+            <path d="M88.2698 95.5156C89.5217 97.3552 91.031 99.0719 92.551 100.77C93.0578 101.339 93.5681 101.908 94.0642 102.495C94.3091 102.784 94.3279 103.15 94.1055 103.313C93.9148 103.452 93.6067 103.394 93.3667 103.191C92.4817 102.438 91.6526 101.625 90.8503 100.773C89.5422 99.3543 88.2673 97.7856 87.4148 96.0063C87.0688 95.2323 87.8308 94.8703 88.2698 95.5156Z" fill="#2C1B60"/>
+            <path d="M38.9876 111.164C44.4475 111.2 57.003 111.39 57.003 111.39L60.0812 98.8255C60.1381 98.5931 60.4739 98.6094 60.5079 98.8463L62.3156 111.428C62.3156 111.428 78.4255 111.37 82.5073 111.229C82.6427 107.076 81.8324 102.266 81.0751 86.6565C80.698 78.8823 80.499 77.524 80.9941 72.2437C81.8869 62.7203 85.2417 57.3518 87.5517 47.3021C89.1068 40.5368 88.7581 35.9482 86.3966 31.4614C83.0965 25.1911 75.5706 22.9701 69.828 22.2264C62.1405 21.2309 52.1321 23.4462 49.9299 30.3063C48.9252 33.436 49.7649 34.679 49.7649 36.9891C49.7649 42.5402 45.0167 49.9851 44.5671 55.305C43.5771 67.0206 42.88 73.9353 41.6772 85.2691C40.6894 94.5769 39.6169 102.827 38.7441 110.027L38.9876 111.164Z" fill="#34CAD7"/>
+            <path d="M63.0333 36.132C61.7104 34.679 60.8887 35.8116 59.11 37.0001C57.1219 38.3286 53.9382 39.6273 47.5225 35.447C44.4544 33.4478 38.4471 26.7818 30.1967 29.7519C24.9357 31.6459 22.7713 43.3327 34.9819 51.9131C41.3564 56.3924 52.0717 59.5285 59.7331 58.3233C74.4188 56.0132 77.664 47.2175 78.159 43.2573C78.5894 39.8141 76.4026 37.3298 72.8137 38.8274C70.2718 39.8881 66.3884 39.8172 63.0333 36.132Z" fill="#8B77E9"/>
+            <path d="M72.8661 43.5468C71.4298 46.3641 69.0175 48.77 66.0851 50.1131C65.1049 50.5565 64.0553 50.874 62.9767 50.9862C62.4357 51.0184 62.0436 50.8094 62.0863 50.5244C62.1217 50.28 62.432 50.0604 62.8158 49.9897C64.2308 49.6394 65.5863 49.067 66.8158 48.2535C68.8678 46.9355 70.6408 45.0951 71.9889 43.0478C72.5399 42.1716 73.3346 42.5136 72.8661 43.5468Z" fill="#2C1B60"/>
+            <path d="M40.1523 41.7266C40.2187 41.5887 40.2663 41.4548 40.3327 41.3167C40.5251 40.9161 40.7402 40.5262 40.9914 40.1613C41.4304 39.5239 41.7592 39.103 41.9587 38.8974C42.0573 38.7958 42.2822 38.6907 42.571 38.856C42.8146 38.9955 42.8315 39.3194 42.7897 39.428C42.6354 39.8288 42.4225 40.2419 42.071 40.8024C41.829 41.1881 41.5707 41.5679 41.28 41.9218C41.1828 42.0403 41.0829 42.1567 40.9765 42.2676C40.8173 42.4336 40.5739 42.3796 40.4047 42.2897C40.2138 42.1883 40.0375 41.9638 40.1523 41.7266Z" fill="#2C1B60"/>
+            <path d="M45.7573 40.6667C45.6989 40.8053 45.6591 40.9393 45.601 41.0782C45.4325 41.481 45.2407 41.8742 45.0114 42.2443C44.611 42.8907 44.308 43.3191 44.1213 43.53C44.029 43.6342 43.8112 43.747 43.5148 43.5958C43.2648 43.4682 43.2297 43.1496 43.2651 43.0408C43.3959 42.6394 43.5841 42.2233 43.902 41.6563C44.1208 41.2662 44.3561 40.8812 44.6252 40.5203C44.7152 40.3996 44.8078 40.2807 44.9071 40.167C45.0561 39.9968 45.3012 40.0401 45.4745 40.1218C45.6701 40.214 45.8578 40.4281 45.7573 40.6667Z" fill="#2C1B60"/>
+            <path d="M69.4786 108.6C73.5507 107.507 78.669 107.5 81.0891 107.94C82.8376 108.258 84.0285 108.776 85.3793 109.701C86.5515 110.503 87.2676 111.567 86.2701 111.6C80.2463 111.57 73.0225 111.54 66.9987 111.511C65.2334 111.502 62.3156 111.428 62.3156 111.428C62.3156 111.428 64.5306 109.929 69.4786 108.6Z" fill="#8B77E9"/>
+            <path d="M50.3146 108.6C46.2425 107.507 41.1242 107.5 38.7041 107.94C36.9556 108.258 35.7647 108.776 34.4139 109.701C33.2417 110.503 32.5255 111.567 33.5231 111.6C39.5469 111.57 47.1707 111.54 53.1945 111.511C54.9597 111.502 57.003 111.39 57.003 111.39C57.003 111.39 55.2625 109.929 50.3146 108.6Z" fill="#8B77E9"/>
+            <path d="M82.08 96.5918C82.4728 99.1514 82.7099 101.766 82.8801 104.351C82.9338 105.216 82.9765 106.082 82.9889 106.952C82.995 107.382 82.7773 107.715 82.5024 107.696C82.2668 107.68 82.0656 107.408 82.009 107.059C81.8005 105.77 81.6572 104.473 81.5234 103.17C81.319 101.012 81.1393 98.81 81.0961 96.6538C81.0886 95.7315 81.9296 95.6886 82.08 96.5918Z" fill="#2C1B60"/>
+            <path d="M50.8575 37.4714C52.9248 38.4147 55.4582 38.9739 57.7041 38.2202C58.4916 37.9559 59.1331 37.3813 59.773 36.8721C60.3153 36.4406 61.0282 35.7341 61.7682 35.707C63.1702 35.6557 63.1531 36.5375 63.84 37.3002C65.9757 39.6719 70.5644 40.2177 73.5133 39.2813C76.1958 38.4296 78.0418 36.3018 79.0372 33.6692C79.2722 33.0475 79.5311 32.5118 80.1116 32.1881C80.4786 31.9833 80.5201 31.9788 80.9403 31.9795C83.4306 31.9834 85.748 31.9366 88.2382 31.9405C88.6853 31.4963 88.5939 30.346 88.4445 30.1667C88.2382 29.9192 87.7545 29.8517 87.1244 29.8367C85.1297 29.7892 64.8984 29.1307 64.8984 28.7351C64.8756 28.5269 64.5706 28.0963 64.4358 27.9391C64.1883 27.6503 63.597 27.5816 62.167 27.5266C61.1654 27.4881 60.5442 27.5138 60.1731 27.7466C59.8021 27.9793 59.6027 28.1818 59.5681 28.5991C54.6091 28.4385 52.894 28.4298 47.935 28.2691C47.4147 28.2522 45.8242 28.1248 45.5974 28.3516C45.3774 28.5716 45.3362 30.538 45.6662 30.538C46.4087 30.6205 46.5551 30.718 46.9862 30.703C46.7907 30.7098 47.1957 32.6951 47.2327 32.8204C47.5566 33.9174 47.986 35.1906 48.7707 36.047C49.3448 36.6735 50.084 37.1185 50.8575 37.4714Z" fill="#2C1B60"/>
+            <path d="M58.0593 30.6629C57.0143 32.3098 55.8168 33.8867 54.5856 35.4C54.1711 35.9045 53.7473 36.402 53.2988 36.8805C53.0773 37.1167 52.7368 37.1469 52.5383 36.9479C52.3679 36.7773 52.3574 36.4933 52.4975 36.2669C53.0151 35.4312 53.5851 34.6369 54.1655 33.8457C55.1408 32.5468 56.1574 31.2416 57.2578 30.0493C57.7365 29.5466 58.4189 30.0736 58.0593 30.6629Z" fill="#8B77E9"/>
+            <path d="M73.8706 31.3473C72.8564 33.1779 71.6836 34.951 70.4743 36.6609C70.0671 37.2314 69.6501 37.7954 69.2075 38.3421C68.9888 38.6121 68.6413 38.6786 68.4316 38.4908C68.2517 38.3297 68.2319 38.0335 68.3677 37.7822C68.8694 36.8546 69.426 35.965 69.9936 35.0775C70.9482 33.6181 71.9448 32.1481 73.0307 30.7874C73.5039 30.2123 74.219 30.6938 73.8706 31.3473Z" fill="#8B77E9"/>
+            <path d="M74.4189 75.8739C73.8413 75.6264 69.716 74.7189 66.4985 73.6463C64.4465 72.9623 60.8999 72.8339 58.1828 72.947C57.0422 68.8851 55.2688 65.7754 55.1955 65.6434C52.0935 60.0598 46.8288 58.8012 44.061 58.3733C43.7887 58.3311 43.5373 58.5207 43.5107 58.795C43.3366 60.5907 42.9793 65.2485 42.8606 67.6455C42.8419 68.022 42.6777 68.3718 42.3979 68.6243C41.6344 69.3134 40.7501 69.9407 40.5139 70.1245C38.1009 72.0017 35.5081 73.8476 34.4135 76.9495C34.0799 77.8947 33.9896 78.8959 34.1305 79.8884C34.677 83.7384 37.297 85.1836 40.6627 85.3733C40.9232 85.388 41.1205 85.615 41.09 85.8742C40.634 89.7401 40.2792 93.3376 40.3171 96.3599C40.4272 97.46 44.1853 98.0013 49.3525 97.7945C54.8528 97.5746 56.928 97.1599 57.8081 95.7298C58.1443 95.1836 58.833 88.1606 58.9082 87.0394C59.145 83.5054 59.177 83.356 59.1558 81.3235C59.9856 81.571 60.801 81.9798 61.6357 82.2687C63.0051 82.7427 64.3933 83.162 65.7956 83.5278C69.3257 84.4485 72.8848 84.8486 76.4817 85.3619C78.7915 85.6915 74.9963 76.1214 74.4189 75.8739Z" fill="#2C1B60"/>
+            <path d="M89.4895 76.0389C88.0038 73.9694 86.1135 72.7526 84.964 70.7999C84.6742 70.3075 84.5404 69.7299 84.5738 69.1595C84.8265 64.8358 85.0665 61.641 85.1926 60.0671C85.2407 59.4655 84.7571 58.9633 84.154 58.9836C82.6584 59.0339 81.0339 58.6877 78.3791 59.7031C76.1052 60.5728 72.3095 62.7947 70.6238 64.5708C66.0034 69.4386 64.6411 75.7201 64.6284 78.679C64.6203 79.94 63.7222 93.868 64.5183 95.6199C65.0686 96.8299 67.4214 96.9178 73.4289 97.4899C77.6295 97.89 80.6149 97.9508 82.6408 97.6883C82.9641 97.6464 83.1966 97.3694 83.1685 97.0446C82.9019 93.9702 82.7609 89.6635 82.6712 86.142C82.6654 85.9154 82.844 85.7353 83.0703 85.7234C84.1959 85.6639 85.2398 85.5052 86.0793 85.1694C90.4797 83.4092 92.5698 80.3291 89.4895 76.0389Z" fill="#2C1B60"/>
+            <path d="M42.0685 84.5981C44.5595 84.6301 47.1122 84.0725 49.6015 83.3844C52.0851 82.6591 54.5683 81.7693 56.8437 80.5501C61.3586 77.9481 65.9233 74.9871 71.0712 73.8747C71.3424 73.8226 71.5859 73.9462 71.6152 74.1504C71.644 74.3495 71.4689 74.55 71.2228 74.6052C67.6349 75.4383 64.1125 77.3701 60.6823 79.3579C58.9694 80.3399 57.278 81.476 55.4191 82.2646C53.5881 83.0682 51.727 83.7015 49.891 84.2165C47.6669 84.8317 44.3822 85.4875 42.0387 85.3436C41.3937 85.2965 41.456 84.5989 42.0685 84.5981Z" fill="#34CAD7"/>
+            <path d="M48.7527 69.401C48.4933 70.4293 51.4975 69.867 51.8299 70.5097C49.0636 70.362 45.8769 71.9255 46.8924 73.2986C47.3404 73.7989 48.9163 72.4611 49.8887 72.8371C48.9788 73.401 48.3184 74.0387 47.6074 74.8389C47.1505 75.9419 48.2376 76.2706 48.717 76.0426C51.1527 74.8839 53.2153 72.9863 56.928 72.9038C57.2681 72.8962 56.5074 71.5269 56.2002 71.1045C55.5402 70.197 55.2538 69.8563 53.3951 69.0832C52.0065 68.5056 49.0961 68.2498 48.7527 69.401Z" fill="#8B77E9"/>
+            <path d="M77.719 85.4443C77.719 85.4443 75.9463 85.2909 73.1548 85.0477C71.9186 84.94 68.5999 84.2786 68.5999 84.2786C70.8298 85.6919 70.6385 88.8017 71.711 88.9666C73.4005 89.2266 72.8661 87.1103 72.8328 86.1981C73.7991 86.9633 73.3611 89.8329 74.6399 89.4204C75.9349 89.0027 75.521 87.4562 75.3824 86.3678C76.7025 87.5641 75.7537 89.9979 77.5129 89.2808C78.6377 88.8223 78.4307 86.429 77.719 85.4443Z" fill="#8B77E9"/>
+            <path d="M81.3981 86.0713C77.3102 86.2219 73.099 85.7529 69.0007 84.8312C66.9728 84.359 64.8891 83.8179 62.9762 83.0179C62.0131 82.6485 61.0539 82.2901 60.092 81.9778C59.1369 81.6738 58.1493 81.3744 57.2348 81.3308C57.0654 81.3404 56.8962 81.1825 56.8564 80.9802C56.818 80.7841 56.9875 80.603 57.2326 80.5847C60.403 80.8055 63.2353 82.3687 66.2172 83.1814C69.2299 84.0346 72.3173 84.6383 75.256 84.9748C77.0358 85.1969 79.6096 85.355 81.3796 85.3254C81.8622 85.3345 81.9094 86.0338 81.3981 86.0713Z" fill="#34CAD7"/>
+            <path d="M46.7407 110.222C45.7468 110.547 44.7697 110.86 43.8222 111.263C43.5534 111.374 43.2685 111.491 42.8584 111.66C42.6984 111.725 42.4538 111.583 42.3156 111.34C42.1972 111.132 42.205 110.912 42.322 110.805C42.7573 110.42 43.2588 110.12 43.7851 109.873C44.6618 109.479 45.6301 109.217 46.5903 109.224C47.007 109.241 47.0861 110.101 46.7407 110.222Z" fill="#2C1B60"/>
+            <path d="M41.2043 109.601C40.214 110.088 39.2353 110.566 38.3075 111.133C38.0422 111.293 37.7626 111.461 37.3664 111.7C37.2111 111.794 36.9521 111.701 36.7912 111.489C36.6535 111.308 36.6405 111.091 36.7477 110.965C37.1479 110.511 37.6227 110.13 38.1305 109.799C38.9772 109.265 39.9303 108.847 40.9147 108.685C41.3437 108.629 41.5485 109.425 41.2043 109.601Z" fill="#2C1B60"/>
+            <path d="M71.9423 109.127C73.3195 109.189 74.6975 109.584 75.9409 110.184C76.3564 110.387 76.7595 110.616 77.1357 110.887C77.3215 111.023 77.341 111.32 77.1831 111.551C77.0478 111.75 76.8325 111.84 76.6662 111.78C75.8869 111.497 75.3801 111.313 74.8415 111.117C73.8383 110.75 72.8007 110.449 71.7722 110.122C71.3376 109.977 71.4494 109.121 71.9423 109.127Z" fill="#2C1B60"/>
+            <path d="M78.4753 108.724C79.7153 108.915 80.9187 109.416 81.978 110.088C82.3318 110.316 82.6711 110.566 82.9807 110.853C83.1333 110.997 83.1084 111.286 82.928 111.5C82.7737 111.684 82.5613 111.757 82.4162 111.69C81.7207 111.352 81.2922 111.143 80.8354 110.922C79.9709 110.49 79.072 110.11 78.1875 109.691C77.8149 109.507 78.0293 108.671 78.4753 108.724Z" fill="#2C1B60"/>
+          </svg>
+          <h1 class="h4 fw-bold mt-4 mb-1">Join the Pulumipus Crew</h1>
+          <p class="small mb-0" style="color: var(--text-muted);">Powered by Pulumi + the Kubernetes Operator</p>
+        </div>
 
-    <form id="signup-form" autocomplete="on">
-      <label for="name">Name</label>
-      <input id="name" name="name" type="text" placeholder="Ada Lovelace" required />
+        <!-- Right: sign-up form -->
+        <div class="col-12 col-md-7 d-flex flex-column justify-content-center p-4 p-md-5">
+          <h2 class="h5 fw-semibold mb-4">Sign up</h2>
 
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" placeholder="ada@example.com" required />
+          <form id="signup-form" autocomplete="on" novalidate>
+            <div class="mb-3">
+              <label for="name" class="form-label">Name</label>
+              <input id="name" name="name" type="text" class="form-control" placeholder="Ada Lovelace" required />
+            </div>
 
-      <button id="submit-btn" type="submit">Sign Up</button>
-    </form>
+            <div class="mb-2">
+              <label for="email" class="form-label">Email</label>
+              <input id="email" name="email" type="email" class="form-control" placeholder="ada@example.com" required />
+            </div>
 
-    <div id="status" class="status"></div>
+            <button id="submit-btn" type="submit" class="btn btn-pulumi w-100 mt-3">Sign Up</button>
+          </form>
 
-    <footer>
-      Deployed as a hybrid workload with the
-      <a href="https://www.pulumi.com/product/pulumi-kubernetes-operator/" target="_blank" rel="noopener">Pulumi Kubernetes Operator</a>.
-    </footer>
-  </main>
+          <div id="status" class="status-msg mt-3 p-3 text-center"></div>
+
+          <p class="footer-note mt-4 mb-0 text-center">
+            Deployed as a hybrid workload with the
+            <a href="https://www.pulumi.com/product/pulumi-kubernetes-operator/" target="_blank" rel="noopener">Pulumi Kubernetes Operator</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     // The API Gateway endpoint is injected at container start by substituting
@@ -186,7 +200,7 @@
 
     function showStatus(message, kind) {
       statusEl.textContent = message;
-      statusEl.className = "status show " + kind;
+      statusEl.className = "status-msg mt-3 p-3 text-center show " + kind;
     }
 
     form.addEventListener("submit", async (event) => {
