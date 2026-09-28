@@ -41,9 +41,13 @@ const branch = config.get("branch") ?? "refs/heads/main";
 const repoDir = config.get("repoDir") ?? "workload";
 
 // Pulumi ESC environment(s) providing AWS creds + Kubernetes provider context
-// to the operator's workspace pod. Defaults to the same ESC environment this
-// deployer stack imports.
+// to the operator's workspace pod. The workload provisions BOTH AWS resources
+// (DynamoDB/Lambda/API Gateway) and Kubernetes resources (Nginx frontend), so
+// it needs two environments:
+//   - cloud-access/aws-access  -> AWS_ACCESS_KEY_ID/SECRET/SESSION_TOKEN
+//   - lotctl/k8s-cluster-aks   -> kubeconfig for the target cluster
 const escEnvironments = config.getObject<string[]>("escEnvironments") ?? [
+    "cloud-access/aws-access",
     "lotctl/k8s-cluster-aks",
 ];
 
@@ -115,6 +119,36 @@ const gitAuthSecret = new k8s.core.v1.Secret(
 );
 
 // ---------------------------------------------------------------------------
+// RBAC: allow the workspace ServiceAccount to use the TokenReview API
+// ---------------------------------------------------------------------------
+// PKO v2 workspace pods authenticate the operator's gRPC calls using
+// Kubernetes token auth, which requires the workspace ServiceAccount to be
+// bound to the `system:auth-delegator` ClusterRole so it can create
+// TokenReviews. Without this the workspace agent rejects the operator with
+// "TokenReview API is unavailable".
+const authDelegatorBinding = new k8s.rbac.v1.ClusterRoleBinding(
+    "workspace-auth-delegator",
+    {
+        metadata: {
+            name: `${operatorNamespace}:${workspaceServiceAccount}:system:auth-delegator`,
+        },
+        roleRef: {
+            apiGroup: "rbac.authorization.k8s.io",
+            kind: "ClusterRole",
+            name: "system:auth-delegator",
+        },
+        subjects: [
+            {
+                kind: "ServiceAccount",
+                namespace: operatorNamespace,
+                name: workspaceServiceAccount,
+            },
+        ],
+    },
+    { provider },
+);
+
+// ---------------------------------------------------------------------------
 // PKO Stack Custom Resource (pulumi.com/v1:Stack)
 // ---------------------------------------------------------------------------
 const workloadStackCr = new k8s.apiextensions.CustomResource(
@@ -125,6 +159,13 @@ const workloadStackCr = new k8s.apiextensions.CustomResource(
         metadata: {
             name: "k8s-hybrid-workload",
             namespace: operatorNamespace,
+            // Changing this value forces the operator to re-run a stalled stack
+            // ("up failed N times; not retrying until the spec or source
+            // changes"). Bump it via: pulumi config set reconcileTrigger <val>
+            annotations: {
+                "demo.pulumi.com/reconcile-trigger":
+                    config.get("reconcileTrigger") ?? "1",
+            },
         },
         spec: {
             // Fully-qualified target stack (org/project/stack).
@@ -172,11 +213,22 @@ const workloadStackCr = new k8s.apiextensions.CustomResource(
             // Refresh the stack's state before each update to detect drift.
             refresh: true,
 
+            // Retry the update when it hits an HTTP 409 "another update in
+            // progress" conflict instead of treating it as a hard failure.
+            // The workspace pod can be recreated mid-update (e.g. on a transient
+            // first-connect timeout), which orphans the Pulumi Cloud update lock;
+            // subsequent attempts then 409 until the lock clears. Retrying rides
+            // that out and lets an attempt win once a workspace instance stays up.
+            retryOnUpdateConflict: true,
+
             // Destroy the managed cloud resources when this Stack CR is deleted.
             destroyOnFinalize: true,
         },
     },
-    { provider, dependsOn: [accessTokenSecret, gitAuthSecret] },
+    {
+        provider,
+        dependsOn: [accessTokenSecret, gitAuthSecret, authDelegatorBinding],
+    },
 );
 
 // ---------------------------------------------------------------------------

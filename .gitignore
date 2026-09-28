@@ -2,11 +2,11 @@
 /node_modules/
 
 .DS_Store
+
+# Local agent / assistant files (not part of the repo's documentation).
 .mcp.json
 CLAUDE.md
 .claude
-.kiro
-AGENTS.md
-
-.kiro
+.kiro/
 skills-lock.json
+AGENTS.md
